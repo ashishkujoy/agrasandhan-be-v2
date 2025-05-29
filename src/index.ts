@@ -42,6 +42,7 @@ app.use(
 		client_id: process.env.GOOGLE_CLIENT_ID,
 		client_secret: process.env.GOOGLE_CLIENT_SECRET,
 		scope: ['openid', 'email', 'profile'],
+		redirect_uri: process.env.OAUTH_REDIRECTION,
 	})
 );
 
