@@ -13,7 +13,8 @@ export type AppContext = Context<{ Bindings: Env; Variables: Variables }>;
 
 
 export const UserZodType = z.object({
-	username: z.string(),
-	age: z.number(),
+	name: z.string(),
+	id: z.string(),
+	email: z.string(),
 });
 

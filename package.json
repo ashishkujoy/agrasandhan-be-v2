@@ -9,6 +9,7 @@
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
+    "@hono/oauth-providers": "^0.8.0",
     "hono": "^4.6.20",
     "redis": "^5.1.1",
     "redis-on-workers": "^0.3.1",
