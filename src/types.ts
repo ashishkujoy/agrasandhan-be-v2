@@ -1,13 +1,19 @@
-import { DateTime, Str } from "chanfana";
+
 import type { Context } from "hono";
-import { z } from "zod";
+import { z } from "zod/v4";
+import { SessionStore, User } from "./middlewares/session";
 
-export type AppContext = Context<{ Bindings: Env }>;
+type Variables = {
+	isAuthenticated: boolean;
+	loggedInUser: User;
+	sessionStore: SessionStore;
+}
 
-export const Task = z.object({
-	name: Str({ example: "lorem" }),
-	slug: Str(),
-	description: Str({ required: false }),
-	completed: z.boolean().default(false),
-	due_date: DateTime(),
+export type AppContext = Context<{ Bindings: Env; Variables: Variables }>;
+
+
+export const UserZodType = z.object({
+	username: z.string(),
+	age: z.number(),
 });
+

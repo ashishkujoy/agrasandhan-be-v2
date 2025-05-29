@@ -1,26 +1,39 @@
-import { fromHono } from "chanfana";
 import { Hono } from "hono";
-import { TaskCreate } from "./endpoints/taskCreate";
-import { TaskDelete } from "./endpoints/taskDelete";
-import { TaskFetch } from "./endpoints/taskFetch";
-import { TaskList } from "./endpoints/taskList";
+
+import { createSessionMiddleware, RedisSessionStore, SessionStore, User } from "./middlewares/session";
+import { home, login } from "./endpoints/auth";
+
+type Variables = {
+	isAuthenticated: boolean;
+	loggedInUser: User;
+	sessionStore: SessionStore;
+}
 
 // Start a Hono app
-const app = new Hono<{ Bindings: Env }>();
-
-// Setup OpenAPI registry
-const openapi = fromHono(app, {
-	docs_url: "/",
+const app = new Hono<{ Bindings: Env; Variables: Variables  }>();
+const redisStore = RedisSessionStore.createInstance({
+	hostname: process.env.REDIS_HOSTNAME,
+	port: process.env.REDIS_PORT,
+	username: process.env.REDIS_USERNAME,
+	password: process.env.REDIS_PASSWORD,
+	prefix: "test"
 });
 
-// Register OpenAPI endpoints
-openapi.get("/api/tasks", TaskList);
-openapi.post("/api/tasks", TaskCreate);
-openapi.get("/api/tasks/:taskSlug", TaskFetch);
-openapi.delete("/api/tasks/:taskSlug", TaskDelete);
+app.use("*", (c, n) => {
+	console.log(`${c.req.method} ${c.req.url}`);
+	return n();
+});
+app.use("*", (c, n) => {
+	c.set("sessionStore", redisStore)
+	return n();
+});
+app.use("*", async (c, n) => {
+	const r = await n();
+	redisStore.close();
+	return r;
+});
+app.use("*", createSessionMiddleware(redisStore));
+app.get("/", home);
+app.post("/login", login);
 
-// You may also register routes for non OpenAPI directly on Hono
-// app.get('/test', (c) => c.text('Hono!'))
-
-// Export the Hono app
 export default app;
