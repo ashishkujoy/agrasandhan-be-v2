@@ -1,9 +1,9 @@
 
-import type { Context } from "hono";
+import type { Context, Hono } from "hono";
 import { z } from "zod/v4";
 import { SessionStore, User } from "./middlewares/session";
 
-type Variables = {
+export type Variables = {
 	isAuthenticated: boolean;
 	loggedInUser: User;
 	sessionStore: SessionStore;
@@ -18,3 +18,5 @@ export const UserZodType = z.object({
 	email: z.string(),
 });
 
+
+export type App = Hono<{ Bindings: Env; Variables: Variables }>

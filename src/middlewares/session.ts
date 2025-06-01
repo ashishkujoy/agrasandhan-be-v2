@@ -11,6 +11,7 @@ export type User = z.infer<typeof UserZodType>;
 export interface SessionStore {
     create(user: User): Promise<string>;
     get(sessionId: string): Promise<User|null|undefined>;
+    close(): Promise<any>;
 }
 
 export class RedisSessionStore implements SessionStore {

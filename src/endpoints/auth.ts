@@ -1,21 +1,31 @@
-import { Context } from "hono";
-import { SessionStore, User } from "../middlewares/session";
+import { googleAuth } from "@hono/oauth-providers/google";
 import { setCookie } from "hono/cookie";
+import { App, AppContext } from "../types";
 
-export const login = async (c: Context) => {
-    const user = (await c.req.json()) as User;
-    const sessionStore = c.get("sessionStore") as SessionStore;
+const googleAuthMiddleware = googleAuth({
+    client_id: process.env.GOOGLE_CLIENT_ID,
+    client_secret: process.env.GOOGLE_CLIENT_SECRET,
+    scope: ['openid', 'email', 'profile'],
+    redirect_uri: process.env.OAUTH_REDIRECTION,
+});
 
-    const sessionId = await sessionStore.create(user);
-    setCookie(c, "sconnectid", sessionId);
-    return c.redirect("/");
+const handleGoogleRedirection = async (c: AppContext) => {
+    const user = c.get('user-google');
+    const sessionStore = c.get("sessionStore");
+    const sessionId = await sessionStore.create({ name: user.name, email: user.email, id: user.id });
+
+    setCookie(c, "sconnectid", sessionId, {
+        path: "/",
+        domain: process.env.COOKIE_DOMAIN,
+        sameSite: "None",
+        secure: true,
+        httpOnly: true,
+    });
+
+    return c.redirect(process.env.SUCCESSFULL_LOGIN_REDIRECT);
 }
 
-export const home = async (c: Context) => {
-    const isAuthenticated = c.get("isAuthenticated") as boolean;
-    if(!isAuthenticated) {
-        return c.redirect("/login");
-    }
-
-    return c.json(c.get("loggedInUser"));
+export const setupAuth = (app: App) => {
+    app.use("/google", googleAuthMiddleware);
+    app.get("/google", handleGoogleRedirection);
 }
